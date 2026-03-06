@@ -8,35 +8,14 @@
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
   "icon_theme": "Material Icon Theme",
-  "git_panel": {
-    "tree_view": true,
-  },
   "vim": {
     "toggle_relative_line_numbers": true,
   },
-  "ui_font_family": "Maple UI",
-  "minimap": {
-    "show": "never",
-  },
-  "autosave": "on_focus_change",
-  "buffer_font_fallbacks": [
-    "Sarasa Mono SC",
-    "Jetbrains Mono",
-    "Consolas",
-    "Courier New",
-    "monospace",
-  ],
-  "buffer_font_family": "Maple Mono NF CN",
-  "preferred_line_length": 100,
+  "ui_font_family": "Maple Mono",
+  "buffer_font_family": "Maple Mono",
   "soft_wrap": "bounded",
-  "session": {
-    "trust_all_worktrees": true,
-  },
   "vim_mode": true,
-  "base_keymap": "VSCode",
-  "ui_font_size": 16,
   "buffer_font_size": 16.0,
-  "buffer_font_weight": 600,
   "buffer_font_features": {
     "calt": true,
   },
@@ -45,6 +24,31 @@
     "light": "Gruvbox Light",
     "dark": "Monokai Vibrant Amped",
   },
+  "git_panel": {
+    "tree_view": true,
+  },
+  "which_key": {
+    "enabled": true,
+  },
+  "buffer_font_weight": 500.0,
+  "session": {
+    "trust_all_worktrees": true,
+  },
+  "minimap": {
+    "thumb": "hover",
+    "show": "auto",
+  },
+  "autosave": "on_focus_change",
+  "buffer_font_fallbacks": [
+    "更纱黑体 SC",
+    "JetBrains Mono",
+    "Consolas",
+    "Courier New",
+    "monospace",
+  ],
+  "preferred_line_length": 100,
+  "base_keymap": "JetBrains",
+  "ui_font_size": 18.0,
   "experimental.theme_overrides": {
     "border": "#444343ff",
     "error.border": "#444343",
@@ -56,5 +60,21 @@
     "deleted.border": "#444343",
     "modified.border": "#444343",
     "success.border": "#444343",
+    "border.variant": "#292828ff",
+    "border.focused": "#a9b665",
+    "pane.focused_border": "#444343",
+    "panel.focused_border": "#444343",
+    "syntax": {
+      "comment": {
+        "font_style": "normal",
+        "font_weight": 400,
+      },
+      "keyword": {
+        "font_style": "italic",
+      },
+      "function": {
+        "font_style": "italic",
+      },
+    },
   },
 }
