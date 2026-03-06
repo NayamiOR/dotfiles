@@ -45,4 +45,16 @@
     "light": "Gruvbox Light",
     "dark": "Monokai Vibrant Amped",
   },
+  "experimental.theme_overrides": {
+    "border": "#444343ff",
+    "error.border": "#444343",
+    "warning.border": "#444343",
+    "info.border": "#444343",
+    "hint.border": "#444343",
+    "conflict.border": "#444343",
+    "created.border": "#444343",
+    "deleted.border": "#444343",
+    "modified.border": "#444343",
+    "success.border": "#444343",
+  },
 }
