@@ -1,0 +1,44 @@
+# Your patch layer for this dsh profile, applied after every bundle layer:
+# a top-level YAML array of loader patch entries (id-targeted config
+# overrides, disables, and insert lists; `!!js` expressions allowed).
+- id: agent-default-model
+  name: "@deepseek-ai/dsh-agent-default-model"
+  config:
+    provider: deepseek-account
+    model: deepseek-flash
+    reasoningEffort: high
+- id: ui-settings-account
+  name: "@deepseek-ai/dsh-client-ui-settings-account"
+  config:
+    version: 1
+    step: done
+    purpose: both
+    process: standard
+    completion: completed
+    usage: detailed
+    developerTools: true
+- id: ui-chat
+  name: "@deepseek-ai/dsh-client-ui-chat"
+  config:
+    transcriptView: detailed
+    performanceUsage: detailed
+- id: ui-settings
+  name: "@deepseek-ai/dsh-client-ui-settings"
+  config:
+    enabled: true
+- id: image-gen
+  name: dsh-image-gen
+  config:
+    provider: seedream
+# kimi-cu 是 Windows 独占的 MCP，其他平台整段不生成
+{{ if eq .chezmoi.os "windows" -}}
+- id: mcp-kimi-cu
+  name: "@deepseek-ai/dsh-mcp-client"
+  config:
+    serverName: kimi-cu
+    transport: stdio
+    command: 'C:\Users\nayam\AppData\Local\Kimi Computer Use\kimi-cu.exe'
+    args:
+      - mcp
+    toolCallTimeoutMs: 120000
+{{- end }}
