@@ -1,23 +1,33 @@
-# Windows 侧只补最小集合：Linux 那套工具由 install-packages 脚本负责。
-# 每个安装都先判断是否已存在，重复跑不会有多余动作。
+# Windows 侧：统一走 scoop（用户级、免管理员），补齐与 Linux 侧等价的工具集。
+# scoop 对已安装的包是幂等的，所以重复 apply 不会重复下载。
 $ErrorActionPreference = 'Stop'
 
-function Test-Tool([string]$Name) {
+function Have([string]$Name) {
     return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
 
-if (-not (Test-Tool 'nvim')) {
-    winget install --id Neovim.Neovim -e --source winget `
-        --accept-package-agreements --accept-source-agreements
+function Ensure([string]$Package, [string]$Command) {
+    if (-not (Have $Command)) { scoop install $Package }
 }
 
-if (-not (Test-Tool 'pnpm')) {
-    if (Test-Tool 'scoop') { scoop install pnpm } else { npm install -g pnpm }
+# 1. scoop 本身
+if (-not (Have 'scoop')) {
+    Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+    Invoke-RestMethod https://get.scoop.sh | Invoke-Expression
 }
 
-if (-not (Test-Tool 'uv')) {
-    Invoke-RestMethod https://astral.sh/uv/install.ps1 | Invoke-Expression
-}
+# 2. 命令行工具
+Ensure 'git'        'git'
+Ensure 'nodejs-lts' 'node'
+Ensure 'neovim'     'nvim'
+Ensure 'jj'         'jj'
+Ensure 'pnpm'       'pnpm'
+Ensure 'rustup'     'rustup'
+Ensure 'uv'         'uv'
 
-$uv = if (Test-Tool 'uv') { (Get-Command uv).Source } else { Join-Path $HOME '.local\bin\uv.exe' }
-& $uv python install 3.12
+# 3. Rust 工具链（rustup 装好后才有 cargo）
+if (-not (Have 'cargo')) { rustup default stable }
+
+# 4. Python 3.12：交给 uv 管理，不动系统 Python
+if (-not (Have 'uv')) { $env:PATH += ";$HOME\.local\bin" }
+uv python install 3.12
