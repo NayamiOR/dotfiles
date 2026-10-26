@@ -9,4 +9,6 @@ ActiveByDefault=True
 [Hotkey]
 # 中英切换
 TriggerKeys=Control+space
+# 清空「临时切换输入法」默认的左 Shift，让左 Shift 传给 Rime 处理
+AltTriggerKeys=
 # 输入法/方案选单
