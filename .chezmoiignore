@@ -2,6 +2,7 @@
 *.sh
 .config/jj
 .config/fcitx5
+.config/niri
 .local/share/fcitx5
 {{ end }}
 {{ if ne .chezmoi.os "windows" }}
