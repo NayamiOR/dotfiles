@@ -1,0 +1,12 @@
+[Behavior]
+# 新窗口/新输入框总是回到默认输入法（rime/中文），接近 Windows 输入法行为
+PreferDefaultInputMethod=True
+# 全局共享输入法状态（等同于 Windows IME 的中英状态）
+ShareInputState=2
+# 启动即激活输入法（默认直接出中文，等同 Windows 行为）
+ActiveByDefault=True
+# 关闭左/右 Shift 切换输入法，避免误触（Rime 内部 Shift 仍然切中英）
+[Hotkey]
+# 中英切换
+TriggerKeys=Control+space
+# 输入法/方案选单

@@ -47,6 +47,16 @@ if ! have jj; then
   pkg jujutsu || cargo install --locked --bin jj jj-cli
 fi
 
+# fcitx5 + Rime：中文输入法（方案与模型由 run_onchange_after_10-rime-frost.sh 拉取）
+if ! have fcitx5; then
+  case "$pm" in
+    dnf) pkg fcitx5 fcitx5-rime fcitx5-gtk fcitx5-qt fcitx5-configtool \
+             librime-lua librime-octagram librime-predict ;;
+    apt) pkg fcitx5 fcitx5-rime fcitx5-frontend-gtk3 fcitx5-frontend-qt5 fcitx5-config-qt || true ;;
+    # Arch: pacman -S fcitx5-im fcitx5-rime（Arch 的 librime 已内置 lua/octagram 插件）
+  esac
+fi
+
 # Python 3.12：用 uv 固定小版本，绕开各发行版自带 Python 版本不一致的问题
 if ! have uv; then
   curl -LsSf https://astral.sh/uv/install.sh | sh

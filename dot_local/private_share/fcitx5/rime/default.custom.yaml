@@ -1,0 +1,20 @@
+# 白霜拼音（rime-frost）全局定制
+# 覆盖同目录 default.yaml 中的同名设置
+patch:
+  # 只保留全拼方案（简体中文）
+  schema_list:
+    - schema: rime_frost
+
+  # 候选词个数
+  menu/page_size: 8
+
+  # 不记忆「简繁」开关，避免误切繁体后一直输出繁体
+  switcher/save_options:
+    - ascii_mode
+    - full_shape
+    - chinese_english
+    - emoji
+    - chaifen
+    - mars
+    - ascii_punct
+    - pin_cand

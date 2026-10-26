@@ -1,0 +1,17 @@
+# 白霜拼音 全拼方案定制：简体中文 + 八股文语法模型（整句优化）
+patch:
+  # 各开关默认状态（reset 后不再被记忆）
+  switches/@0/reset: 0        # 中文
+  switches/@1/reset: 0        # 简体（不开繁体转换）
+  switches/@2/reset: 0        # 半角
+  switches/@3/reset: 0        # 中文标点
+  switches/@4/reset: 1        # emoji 开
+  switches/@5/reset: 0        # 中英翻译关
+
+  # 语言模型：八股文（简中），文件 zh-hans-t-essay-bgw.gram
+  grammar:
+    language: zh-hans-t-essay-bgw
+    non_collocation_penalty: -4   # 白霜要求的重要参数，不能被补丁覆盖掉
+  translator/contextual_suggestions: true
+  translator/max_homophones: 7
+  translator/max_homographs: 7
