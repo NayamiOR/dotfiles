@@ -1,0 +1,29 @@
+{
+  "name": "dsh-profile-desktop",
+  "private": true,
+  "dependencies": {
+    "@changfenhuang/dsh-genui": "^0.14.0",
+    "cc-safety-net": "2.6.19",
+    "dsh-better-sidebar": "^0.28.0",
+    "dsh-image-gen": "^0.9.2",
+    "dsh-plugin-message-edit": "1.2.1",
+    "dsh-whale-widget": "0.4.2",
+    "dshmarket": "^1.66.47"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "@deepseek-ai/dsh-experimental-auto-review",
+        "dsh-better-sidebar",
+        "@changfenhuang/dsh-genui",
+        "dshmarket",
+        "dsh-whale-widget",
+        "cc-safety-net",
+        "dsh-image-gen",
+        "dsh-plugin-message-edit"
+      ]
+    }
+  }
+}
