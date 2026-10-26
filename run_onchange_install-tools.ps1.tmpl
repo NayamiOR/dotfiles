@@ -1,0 +1,23 @@
+# Windows 侧只补最小集合：Linux 那套工具由 install-packages 脚本负责。
+# 每个安装都先判断是否已存在，重复跑不会有多余动作。
+$ErrorActionPreference = 'Stop'
+
+function Test-Tool([string]$Name) {
+    return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
+}
+
+if (-not (Test-Tool 'nvim')) {
+    winget install --id Neovim.Neovim -e --source winget `
+        --accept-package-agreements --accept-source-agreements
+}
+
+if (-not (Test-Tool 'pnpm')) {
+    if (Test-Tool 'scoop') { scoop install pnpm } else { npm install -g pnpm }
+}
+
+if (-not (Test-Tool 'uv')) {
+    Invoke-RestMethod https://astral.sh/uv/install.ps1 | Invoke-Expression
+}
+
+$uv = if (Test-Tool 'uv') { (Get-Command uv).Source } else { Join-Path $HOME '.local\bin\uv.exe' }
+& $uv python install 3.12

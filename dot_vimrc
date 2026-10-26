@@ -1,0 +1,3 @@
+imap jk <esc>
+nmap H ^
+nmap L $

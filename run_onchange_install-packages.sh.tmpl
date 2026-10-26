@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Linux 侧的一键安装。内容一改，chezmoi 就会在所有机器上重跑本脚本。
+set -euo pipefail
+
+have() { command -v "$1" >/dev/null 2>&1; }
+. /etc/os-release
+
+case "${ID:-} ${ID_LIKE:-}" in
+  *arch*)             pm=pacman ;;
+  *fedora*|*rhel*)    pm=dnf ;;
+  *ubuntu*|*debian*)  pm=apt ;;
+  *) echo "未识别的发行版: ${PRETTY_NAME:-unknown}"; exit 1 ;;
+esac
+
+pkg() {
+  case "$pm" in
+    pacman) sudo pacman -S --needed --noconfirm "$@" ;;
+    dnf)    sudo dnf install -y "$@" ;;
+    apt)    sudo apt-get update -y && sudo apt-get install -y "$@" ;;
+  esac
+}
+
+# 基础包 + npm
+case "$pm" in
+  pacman) pkg git neovim curl nodejs npm ;;
+  dnf)    pkg git neovim curl nodejs npm ;;
+  apt)    pkg git neovim curl nodejs npm ;;
+esac
+
+# Rust：统一走 rustup，避免发行版仓库里的旧版本
+if ! have cargo; then
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+  export PATH="$HOME/.cargo/bin:$PATH"
+fi
+
+# pnpm
+if ! have pnpm; then
+  case "$pm" in
+    pacman) pkg pnpm ;;
+    dnf)    pkg pnpm ;;
+    apt)    sudo npm install -g pnpm ;;
+  esac
+fi
+
+# jj：优先发行版包，取不到就 cargo 编译（首次会慢）
+if ! have jj; then
+  pkg jujutsu || cargo install --locked --bin jj jj-cli
+fi
+
+# Python 3.12：用 uv 固定小版本，绕开各发行版自带 Python 版本不一致的问题
+if ! have uv; then
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+uv python install 3.12
