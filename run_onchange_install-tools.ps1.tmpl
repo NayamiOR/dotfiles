@@ -2,6 +2,13 @@
 # scoop 对已安装的包是幂等的，所以重复 apply 不会重复下载。
 $ErrorActionPreference = 'Stop'
 
+# chezmoi 用新进程跑本脚本，scoop 的 shims 不在 PATH 里；
+# 不先补，Have 判断全为假，每次 apply 都会重装一遍。
+$scoopShims = "$HOME\scoop\shims"
+if ((Test-Path $scoopShims) -and ($env:PATH -notlike "*$scoopShims*")) {
+    $env:PATH = "$scoopShims;$env:PATH"
+}
+
 function Have([string]$Name) {
     return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
@@ -26,10 +33,15 @@ Ensure 'rustup'     'rustup'
 Ensure 'uv'         'uv'
 
 # 3. Rust 工具链（rustup 装好后才有 cargo）
+# 无代理时指向 rsproxy 国内镜像：setx 持久化，$env 供本次会话立即生效
+setx RUSTUP_DIST_SERVER 'https://rsproxy.cn' | Out-Null
+setx RUSTUP_UPDATE_ROOT 'https://rsproxy.cn/rustup' | Out-Null
+$env:RUSTUP_DIST_SERVER = 'https://rsproxy.cn'
+$env:RUSTUP_UPDATE_ROOT = 'https://rsproxy.cn/rustup'
 if (-not (Have 'cargo')) { rustup default stable }
 
 # 4. Python 3.12：交给 uv 管理，不动系统 Python
-if (-not (Have 'uv')) { $env:PATH += ";$HOME\.local\bin" }
+if ($env:PATH -notlike "*$HOME\.local\bin*") { $env:PATH = "$HOME\.local\bin;$env:PATH" }
 uv python install 3.12
 
 # 5. Pi coding agent：走 npm，需要 Node 22.19+

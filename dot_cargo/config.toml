@@ -1,0 +1,17 @@
+# 无代理时走 rsproxy 国内镜像，crates.io 依赖下载大幅提速
+# 参考：https://rsproxy.cn
+[source.crates-io]
+replace-with = 'rsproxy-sparse'
+
+[source.rsproxy]
+registry = "https://rsproxy.cn/crates.io-index"
+
+[source.rsproxy-sparse]
+registry = "sparse+https://rsproxy.cn/index/"
+
+[registries.rsproxy]
+index = "https://rsproxy.cn/crates.io-index"
+
+# git 依赖改用系统 git 拉取（可选，一般更稳）
+[net]
+git-fetch-with-cli = true

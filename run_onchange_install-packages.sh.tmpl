@@ -2,6 +2,19 @@
 # Linux 侧的一键安装。内容一改，chezmoi 就会在所有机器上重跑本脚本。
 set -euo pipefail
 
+# chezmoi 用非交互 shell 跑本脚本，家目录下的 bin 不在默认 PATH 里。
+# 不先补齐，have cargo/uv/pi 全为假，每次 apply 都会重装一遍。
+# 倒序 prepend，最终顺序为 ~/.cargo/bin:~/.local/bin:~/.local/share/pnpm
+for d in "$HOME/.local/share/pnpm" "$HOME/.local/bin" "$HOME/.cargo/bin"; do
+  if [ -d "$d" ]; then
+    case ":$PATH:" in
+      *":$d:"*) ;;
+      *)        PATH="$d:$PATH" ;;
+    esac
+  fi
+done
+export PATH
+
 have() { command -v "$1" >/dev/null 2>&1; }
 . /etc/os-release
 
@@ -28,9 +41,12 @@ case "$pm" in
 esac
 
 # Rust：统一走 rustup，避免发行版仓库里的旧版本
+# 无代理时先指向 rsproxy 国内镜像，避免首次安装工具链龟速
 if ! have cargo; then
+  export RUSTUP_DIST_SERVER="https://rsproxy.cn"
+  export RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
+  # PATH 由脚本开头统一补，--no-modify-path 保证不污染 shell 配置文件
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
-  export PATH="$HOME/.cargo/bin:$PATH"
 fi
 
 # pnpm
@@ -42,9 +58,45 @@ if ! have pnpm; then
   esac
 fi
 
-# jj：优先发行版包，取不到就 cargo 编译（首次会慢）
+# jj：优先发行版包 → 其次 GitHub 预编译二进制（静态 musl，约 1 分钟）→ 最后才 cargo 编译（十几分钟）
+# GitHub Releases 直连在无代理时基本超时，所以按顺序试镜像，任一个成功即止。
+jj_prebuilt() {
+  local arch tag asset tmp base url
+  case "$(uname -m)" in
+    x86_64|amd64)  arch=x86_64-unknown-linux-musl ;;
+    aarch64|arm64) arch=aarch64-unknown-linux-musl ;;
+    *) return 1 ;;
+  esac
+
+  # 版本号：可用 JJ_VERSION=v0.46.0 固定，否则取 latest
+  tag="${JJ_VERSION:-}"
+  if [ -z "$tag" ]; then
+    tag=$(curl -fsSL --connect-timeout 10 --max-time 20 https://api.github.com/repos/jj-vcs/jj/releases/latest 2>/dev/null \
+          | sed -n 's/.*"tag_name": *"\(v[^"]*\)".*/\1/p' | head -n1) || true
+  fi
+  [ -n "$tag" ] || return 1
+
+  asset="jj-${tag}-${arch}.tar.gz"
+  tmp=$(mktemp -d)
+  # 镜像优先：直连 GitHub 在无代理环境下要卡 2 分钟才报连不上，浪费时间。
+  # --connect-timeout 让连不通的地址快速失败。
+  for base in 'https://gh-proxy.com/' ''; do
+    url="${base}https://github.com/jj-vcs/jj/releases/download/${tag}/${asset}"
+    echo "取 jj 预编译包: $url"
+    if curl -fsSL --connect-timeout 15 --max-time 300 -o "$tmp/$asset" "$url"; then
+      mkdir -p "$tmp/x"
+      tar xzf "$tmp/$asset" -C "$tmp/x"
+      install -Dm755 "$tmp/x/jj" "$HOME/.local/bin/jj"
+      rm -rf "$tmp"
+      return 0
+    fi
+  done
+  rm -rf "$tmp"
+  return 1
+}
+
 if ! have jj; then
-  pkg jujutsu || cargo install --locked --bin jj jj-cli
+  pkg jujutsu || jj_prebuilt || cargo install --locked --bin jj jj-cli
 fi
 
 # fcitx5 + Rime：中文输入法（方案与模型由 run_onchange_after_10-rime-frost.sh 拉取）
@@ -60,7 +112,6 @@ fi
 # Python 3.12：用 uv 固定小版本，绕开各发行版自带 Python 版本不一致的问题
 if ! have uv; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
-  export PATH="$HOME/.local/bin:$PATH"
 fi
 uv python install 3.12
 
@@ -77,5 +128,4 @@ fi
 # Pi coding agent：官方安装脚本，依赖版本固定，之后用 `pi update` 升级
 if ! have pi; then
   curl -fsSL https://pi.dev/install.sh | sh
-  export PATH="$HOME/.local/bin:$PATH"
 fi
