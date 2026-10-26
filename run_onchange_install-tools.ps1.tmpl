@@ -31,3 +31,8 @@ if (-not (Have 'cargo')) { rustup default stable }
 # 4. Python 3.12：交给 uv 管理，不动系统 Python
 if (-not (Have 'uv')) { $env:PATH += ";$HOME\.local\bin" }
 uv python install 3.12
+
+# 5. Pi coding agent：走 npm，需要 Node 22.19+
+if (-not (Have 'pi')) {
+    npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+}

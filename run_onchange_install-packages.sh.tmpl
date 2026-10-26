@@ -22,9 +22,9 @@ pkg() {
 
 # 基础包 + npm
 case "$pm" in
-  pacman) pkg git neovim curl nodejs npm ;;
-  dnf)    pkg git neovim curl nodejs npm ;;
-  apt)    pkg git neovim curl nodejs npm ;;
+  pacman) pkg git neovim curl nodejs npm fish ;;
+  dnf)    pkg git neovim curl nodejs npm fish ;;
+  apt)    pkg git neovim curl nodejs npm fish ;;
 esac
 
 # Rust：统一走 rustup，避免发行版仓库里的旧版本
@@ -53,3 +53,19 @@ if ! have uv; then
   export PATH="$HOME/.local/bin:$PATH"
 fi
 uv python install 3.12
+
+# fish：设为默认登录 shell（只改当前用户的 passwd 条目，不动系统默认）
+fish_bin="$(command -v fish || true)"
+if [ -n "$fish_bin" ]; then
+  current_shell="$(getent passwd "$USER" | cut -d: -f7)"
+  if [ "$current_shell" != "$fish_bin" ]; then
+    grep -qx "$fish_bin" /etc/shells || echo "$fish_bin" | sudo tee -a /etc/shells >/dev/null
+    sudo chsh -s "$fish_bin" "$USER"
+  fi
+fi
+
+# Pi coding agent：官方安装脚本，依赖版本固定，之后用 `pi update` 升级
+if ! have pi; then
+  curl -fsSL https://pi.dev/install.sh | sh
+  export PATH="$HOME/.local/bin:$PATH"
+fi
