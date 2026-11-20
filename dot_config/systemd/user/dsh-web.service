@@ -1,0 +1,22 @@
+[Unit]
+Description=DeepSeek Harness Web UI (dsh web)
+After=graphical-session.target
+PartOf=graphical-session.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+# dsh 是 npm 全局包，可能落在 linuxbrew 或 ~/.local/bin；systemd 用户会话的
+# 默认 PATH 不含这些目录（而且 bin.js 的 shebang 是 `#!/usr/bin/env node`，
+# node 也得能找到），所以这里显式给出，再用 /usr/bin/env 解析 dsh。
+Environment=PATH=%h/.local/bin:/home/linuxbrew/.linuxbrew/bin:%h/.linuxbrew/bin:/usr/local/bin:/usr/bin
+ExecStart=/usr/bin/env dsh web --no-open
+WorkingDirectory=%h
+Restart=on-failure
+RestartSec=3
+SuccessExitStatus=143
+# Keep the server's stdout/stderr in the user journal for crash diagnosis.
+
+[Install]
+WantedBy=graphical-session.target

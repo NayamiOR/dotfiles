@@ -4,8 +4,9 @@ set -euo pipefail
 
 # chezmoi 用非交互 shell 跑本脚本，家目录下的 bin 不在默认 PATH 里。
 # 不先补齐，have cargo/uv/pi 全为假，每次 apply 都会重装一遍。
-# 倒序 prepend，最终顺序为 ~/.cargo/bin:~/.local/bin:~/.local/share/pnpm
-for d in "$HOME/.local/share/pnpm" "$HOME/.local/bin" "$HOME/.cargo/bin"; do
+# 倒序 prepend，最终顺序为 /home/linuxbrew/.linuxbrew/bin:~/.cargo/bin:~/.local/bin:~/.local/share/pnpm
+# linuxbrew 也放进来：dsh 的 node 由 brew 提供，不补齐会看不到 brew 的 node/npm。
+for d in "$HOME/.local/share/pnpm" "$HOME/.local/bin" "$HOME/.cargo/bin" /home/linuxbrew/.linuxbrew/bin; do
   if [ -d "$d" ]; then
     case ":$PATH:" in
       *":$d:"*) ;;
@@ -128,4 +129,20 @@ fi
 # Pi coding agent：官方安装脚本，依赖版本固定，之后用 `pi update` 升级
 if ! have pi; then
   curl -fsSL https://pi.dev/install.sh | sh
+fi
+
+# DeepSeek Harness (dsh)：npm 全局包，engines 要求 node>=24.9，发行版自带的
+# nodejs 往往太旧，所以优先用 linuxbrew 的 npm；没有 brew 时才回落到系统 npm。
+if ! have dsh; then
+  npm_bin=""
+  if [ -x /home/linuxbrew/.linuxbrew/bin/npm ]; then
+    npm_bin=/home/linuxbrew/.linuxbrew/bin/npm
+  elif have npm && node -e 'const v=process.versions.node.split(".").map(Number);process.exit(v[0]>24||(v[0]===24&&v[1]>=9)?0:1)' 2>/dev/null; then
+    npm_bin="$(command -v npm)"
+  fi
+  if [ -n "$npm_bin" ]; then
+    "$npm_bin" install -g @deepseek-ai/dsh
+  else
+    echo "跳过 dsh：需要 node>=24.9 的 npm（建议先 brew install node 再重跑 apply）" >&2
+  fi
 fi

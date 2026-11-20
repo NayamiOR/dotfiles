@@ -5,6 +5,7 @@
 .config/fcitx5
 .config/jj
 .config/niri
+.config/systemd
 .local/share/fcitx5
 {{ end }}
 {{ if ne .chezmoi.os "windows" }}
