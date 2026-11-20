@@ -1,7 +1,9 @@
 {{ if ne .chezmoi.os "linux" }}
 *.sh
-.config/jj
+.Xresources
+.config/dms
 .config/fcitx5
+.config/jj
 .config/niri
 .local/share/fcitx5
 {{ end }}

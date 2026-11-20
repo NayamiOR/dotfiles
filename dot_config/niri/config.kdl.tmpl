@@ -12,6 +12,25 @@ environment {
     SDL_IM_MODULE "fcitx"
     GLFW_IM_MODULE "ibus"
     INPUT_METHOD "fcitx"
+    // niri 自己的 PATH 不含 ~/.local/bin（它是 systemd user session 拉起的），
+    // 所以 spawn 的命令会绕过用户级包装器。显式把用户 bin 放到最前面。
+    PATH "/home/nayami/.local/bin:/home/nayami/.cargo/bin:/usr/local/bin:/usr/bin"
+    // 光标：必须和 DMS 的 dms/cursor.kdl（Overwatch / 128）以及 ~/.Xresources 保持一致。
+    // 不设的话 Wayland 原生程序（Qt/GTK）会落到内置的 24px "default" 主题，
+    // 只有走 X11 的程序才读得到 ~/.Xresources 里的 128。
+    XCURSOR_THEME "Overwatch"
+    XCURSOR_SIZE "36"
+}
+
+
+
+
+
+// Cursor theme: Overwatch Pointer (converted from Windows .cur/.ani by
+// ~/Downloads/Overwatch_Pointer/make-xcursor-theme.py).
+cursor {
+    xcursor-theme "Overwatch"
+    xcursor-size 24
 }
 
 // Input device configuration.
@@ -280,6 +299,7 @@ layout {
 
 // This line starts waybar, a commonly used bar for Wayland compositors.
 // spawn-at-startup "waybar"
+spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
 
 // Start the fcitx5 input method daemon, then make sure the Rime IM is active.
 spawn-sh-at-startup "fcitx5 -d; sleep 2; fcitx5-remote -o"
@@ -375,9 +395,26 @@ binds {
     // shows a list of important hotkeys.
     Mod+Shift+Slash { show-hotkey-overlay; }
 
+    // Mod+V 已被 toggle-window-floating 占用，改到 Mod+Ctrl+V。
+    Mod+Ctrl+V hotkey-overlay-title="Clipboard history" {
+       spawn "/home/nayami/.local/bin/clipmenu";
+    }
+
     // Suggested binds for running programs: terminal, app launcher, screen locker.
-    Mod+T hotkey-overlay-title="Open a Terminal: alacritty" { spawn "alacritty"; }
-    Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+    // Ghostty 是 GTK4 + 原生 Wayland：不能带 GTK_IM_MODULE=fcitx（fcitx5#1218）。
+    // ~/.local/bin/ghostty 包装器会剥掉该变量，任何启动方式（键位/fuzzel/shell/desktop）都走它。
+    // 必须走绝对路径的包装器：niri 的 PATH 不包含 ~/.local/bin，
+    // 直接 spawn "ghostty" 会落到 /usr/bin/ghostty 并继承 GTK_IM_MODULE=fcitx（fcitx5#1218）。
+    Mod+T hotkey-overlay-title="Open a Terminal: ghostty" { spawn "/home/nayami/.local/bin/ghostty"; }
+    // 主力启动器走 DMS（常驻 shell，主题一致，且支持 fcitx5 中文输入）。
+    // 必须用绝对路径：niri 的 PATH 可能不含 /usr/bin 之外的路径，且避免和 ~/.local/bin 里的同名程序混淆。
+    Mod+D hotkey-overlay-title="Run an Application: DMS launcher" { spawn "/usr/bin/dms" "ipc" "call" "launcher" "toggle"; }
+    // 文件管理器：Nautilus（GNOME Files），同样走绝对路径。
+    Mod+E hotkey-overlay-title="Open a File Manager: nautilus" { spawn "/usr/bin/nautilus" "--new-window"; }
+    // fuzzel 保留给纯英文/拼音首字母找 app 和 --dmenu 管道脚本用（1.14 无 IME）。
+    Mod+Alt+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+    // 输入法开关：绑在 compositor 层，全屏游戏里也一定能收到（fcitx5 自己的热键在 Wayland 下经常收不到）。
+    Mod+Space hotkey-overlay-title="Toggle IME: fcitx5-remote -t" { spawn "fcitx5-remote" "-t"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
@@ -401,11 +438,11 @@ binds {
     XF86AudioPrev        allow-when-locked=true { spawn-sh "playerctl previous"; }
     XF86AudioNext        allow-when-locked=true { spawn-sh "playerctl next"; }
 
-    // Example brightness key mappings for brightnessctl.
-    // You can use regular spawn with multiple arguments too (to avoid going through "sh"),
-    // but you need to manually put each argument in separate "" quotes.
-    XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+10%"; }
-    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "10%-"; }
+    // 亮度键（Fn + 太阳图标键）：走 DMS 的 brightness IPC，屏幕上有 OSD 亮度条。
+    // 不再依赖 brightnessctl（本机未安装）；背光设备是 amdgpu_bl1，必须显式传设备名。
+    // 参数：increment/decrement <步长%> <设备>。
+    XF86MonBrightnessUp allow-when-locked=true { spawn "/usr/bin/dms" "ipc" "call" "brightness" "increment" "10" "backlight:amdgpu_bl1"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "/usr/bin/dms" "ipc" "call" "brightness" "decrement" "10" "backlight:amdgpu_bl1"; }
 
     // Open/close the Overview: a zoomed-out view of workspaces and windows.
     // You can also move the mouse into the top-left hot corner,
@@ -415,8 +452,6 @@ binds {
     Mod+Q repeat=false { close-window; }
 
     Mod+Left  { focus-column-left; }
-    Mod+Down  { focus-window-down; }
-    Mod+Up    { focus-window-up; }
     Mod+Right { focus-column-right; }
     Mod+H     { focus-column-left; }
     Mod+J     { focus-window-down; }
@@ -424,8 +459,6 @@ binds {
     Mod+L     { focus-column-right; }
 
     Mod+Ctrl+Left  { move-column-left; }
-    Mod+Ctrl+Down  { move-window-down; }
-    Mod+Ctrl+Up    { move-window-up; }
     Mod+Ctrl+Right { move-column-right; }
     Mod+Ctrl+H     { move-column-left; }
     Mod+Ctrl+J     { move-window-down; }
@@ -470,17 +503,17 @@ binds {
     // Mod+Shift+Ctrl+Left  { move-workspace-to-monitor-left; }
     // ...
 
-    Mod+Page_Down      { focus-workspace-down; }
-    Mod+Page_Up        { focus-workspace-up; }
+    Mod+Down           { focus-workspace-down; }
+    Mod+Up             { focus-workspace-up; }
     Mod+U              { focus-workspace-down; }
     Mod+I              { focus-workspace-up; }
-    Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
-    Mod+Ctrl+Page_Up   { move-column-to-workspace-up; }
+    Mod+Ctrl+Down      { move-column-to-workspace-down; }
+    Mod+Ctrl+Up        { move-column-to-workspace-up; }
     Mod+Ctrl+U         { move-column-to-workspace-down; }
     Mod+Ctrl+I         { move-column-to-workspace-up; }
 
     // Alternatively, there are commands to move just a single window:
-    // Mod+Ctrl+Page_Down { move-window-to-workspace-down; }
+    // Mod+Ctrl+Down { move-window-to-workspace-down; }
     // ...
 
     Mod+Shift+Page_Down { move-workspace-down; }
@@ -494,22 +527,21 @@ binds {
     // To avoid scrolling through workspaces really fast, you can use
     // the cooldown-ms property. The bind will be rate-limited to this value.
     // You can set a cooldown on any bind, but it's most useful for the wheel.
-    Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
-    Mod+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }
-    Mod+Ctrl+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
-    Mod+Ctrl+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }
+    Mod+WheelScrollDown      { focus-column-right; }
+    Mod+WheelScrollUp        { focus-column-left; }
+    Mod+Ctrl+WheelScrollDown { move-column-right; }
+    Mod+Ctrl+WheelScrollUp   { move-column-left; }
 
     Mod+WheelScrollRight      { focus-column-right; }
     Mod+WheelScrollLeft       { focus-column-left; }
     Mod+Ctrl+WheelScrollRight { move-column-right; }
     Mod+Ctrl+WheelScrollLeft  { move-column-left; }
 
-    // Usually scrolling up and down with Shift in applications results in
-    // horizontal scrolling; these binds replicate that.
-    Mod+Shift+WheelScrollDown      { focus-column-right; }
-    Mod+Shift+WheelScrollUp        { focus-column-left; }
-    Mod+Ctrl+Shift+WheelScrollDown { move-column-right; }
-    Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
+    // Swapped: Shift+wheel now switches workspaces.
+    Mod+Shift+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
+    Mod+Shift+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }
+    Mod+Ctrl+Shift+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
+    Mod+Ctrl+Shift+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }
 
     // Similarly, you can bind touchpad scroll "ticks".
     // Touchpad scrolling is continuous, so for these binds it is split into
@@ -572,7 +604,7 @@ binds {
     Mod+Ctrl+Shift+R { switch-preset-window-height; }
     Mod+Ctrl+R { reset-window-height; }
 
-    Mod+F { maximize-column; }
+    Mod+F {maximize-window-to-edges;}
     Mod+Shift+F { fullscreen-window; }
 
     // While maximize-column leaves gaps and borders around the window,
@@ -623,6 +655,7 @@ binds {
     // Mod+Shift+Space { switch-layout "prev"; }
 
     Print { screenshot; }
+    Ctrl+Alt+A { screenshot; }
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }
 
@@ -644,3 +677,14 @@ binds {
     // moving the mouse or pressing any other key.
     Mod+Shift+P { power-off-monitors; }
 }
+
+// DMS Include Configs
+// 以下两个文件由 DMS 依据 ~/.config/dms/settings.json 自动生成（DO NOT EDIT）。
+// 全新机器上 DMS 还没跑过时它们不存在，而 niri 遇到缺失的 include 会整份配置
+// 加载失败、会话直接起不来，所以这里按文件是否存在决定要不要 include。
+{{ if glob (joinPath .chezmoi.homeDir ".config/niri/dms/input.kdl") -}}
+include "dms/input.kdl"
+{{ end -}}
+{{ if glob (joinPath .chezmoi.homeDir ".config/niri/dms/cursor.kdl") -}}
+include "dms/cursor.kdl"
+{{ end -}}

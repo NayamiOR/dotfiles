@@ -1,0 +1,72 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# ── Ayu Light · 低饱和单色块 ──
+# canvas #fafafa（终端背景）· 主色块 #e4e9ee（目录+git 共用一个块，避免空模块留下孤立的箭头）
+# 两行：上行 目录·分支·状态（右侧 耗时+语言），下行 上条命令状态码 + 提示符
+
+format = """
+[](fg:#fafafa bg:#e4e9ee)\
+$directory$git_branch$git_status\
+[](fg:#e4e9ee)\
+$fill\
+$cmd_duration$rust$nodejs$python$golang\
+$line_break\
+$status$character"""
+
+add_newline = false
+
+[fill]
+symbol = " "
+
+[character]
+success_symbol = "[❯](bold #1a6fb0)"
+error_symbol = "[❯](bold #c0392b)"
+vimcmd_symbol = "[❮](bold #6b7280)"
+vimcmd_replace_one_symbol = "[❮](bold #7c5295)"
+vimcmd_replace_symbol = "[❮](bold #7c5295)"
+vimcmd_visual_symbol = "[❮](bold #7c5295)"
+
+[directory]
+truncation_length = 1
+truncate_to_repo = false
+fish_style_pwd_dir_length = 1
+format = "[ $path ]($style)"
+style = "bold fg:#1a6fb0 bg:#e4e9ee"
+
+[git_branch]
+format = "[·](fg:#8a9199 bg:#e4e9ee)[ $branch ]($style)"
+style = "bold fg:#7c5295 bg:#e4e9ee"
+
+[git_status]
+format = "([$all_status$ahead_behind ]($style))"
+style = "bold fg:#c0392b bg:#e4e9ee"
+
+[cmd_duration]
+min_time = 500
+format = "[ $duration ]($style)"
+style = "fg:#8a9199"
+
+[status]
+format = "[ $status ]($style)"
+style = "bold fg:#c0392b"
+disabled = false
+
+[rust]
+symbol = "R"
+format = "[ $symbol $version ]($style)"
+style = "fg:#8a9199"
+
+[nodejs]
+symbol = "NJS"
+format = "[ $symbol $version ]($style)"
+style = "fg:#8a9199"
+
+[python]
+symbol = "PY"
+format = "[ $symbol $version ]($style)"
+style = "fg:#8a9199"
+
+[golang]
+symbol = "GO"
+format = "[ $symbol $version ]($style)"
+style = "fg:#8a9199"
