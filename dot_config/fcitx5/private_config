@@ -1,14 +1,81 @@
-[Behavior]
-# 新窗口/新输入框总是回到默认输入法（rime/中文），接近 Windows 输入法行为
-PreferDefaultInputMethod=True
-# 全局共享输入法状态（等同于 Windows IME 的中英状态）
-ShareInputState=2
-# 启动即激活输入法（默认直接出中文，等同 Windows 行为）
-ActiveByDefault=True
-# 关闭左/右 Shift 切换输入法，避免误触（Rime 内部 Shift 仍然切中英）
 [Hotkey]
-# 中英切换
+# Toggle Input Method
 TriggerKeys=Control+space
-# 清空「临时切换输入法」默认的左 Shift，让左 Shift 传给 Rime 处理
+# Enumerate when holding modifier of Toggle key
+# EnumerateWithTriggerKeys=True
+# Consume redundant Activate/Deactivate key
+# ConsumeRedundantActivateKeys=False
+# Temporarily Toggle Input Method
 AltTriggerKeys=
-# 输入法/方案选单
+# Enumerate Input Method Forward
+# EnumerateForwardKeys=
+# Enumerate Input Method Backward
+# EnumerateBackwardKeys=
+# Skip first input method while enumerating
+# EnumerateSkipFirst=False
+# Time limit in milliseconds for triggering modifier key shortcuts
+# ModifierOnlyKeyTimeout=250
+
+# [Hotkey/ActivateKeys]
+# 0=Hangul_Hanja
+
+# [Hotkey/DeactivateKeys]
+# 0=Hangul_Romaja
+
+# [Hotkey/EnumerateGroupForwardKeys]
+# 0=Super+space
+
+# [Hotkey/EnumerateGroupBackwardKeys]
+# 0=Shift+Super+space
+
+# [Hotkey/PrevPage]
+# 0=Up
+
+# [Hotkey/NextPage]
+# 0=Down
+
+# [Hotkey/PrevCandidate]
+# 0=Shift+Tab
+
+# [Hotkey/NextCandidate]
+# 0=Tab
+
+# [Hotkey/TogglePreedit]
+# 0=Control+Alt+P
+
+[Behavior]
+# Activate input method by default
+ActiveByDefault=True
+# Reset state on Focus In
+# resetStateWhenFocusIn=No
+# Share Input State
+ShareInputState=Program
+# Show preedit in application
+# PreeditEnabledByDefault=True
+# Show Input Method Information when switch input method
+# ShowInputMethodInformation=True
+# Show Input Method Information when changing focus
+# showInputMethodInformationWhenFocusIn=False
+# Show compact input method information
+# CompactInputMethodInformation=True
+# Show first input method information
+# ShowFirstInputMethodInformation=True
+# Default Candidates per page
+# DefaultPageSize=5
+# Override XKB Option
+# OverrideXkbOption=False
+# Custom XKB Option
+# CustomXkbOption=
+# Force Enabled Addons
+# EnabledAddons=
+# Force Disabled Addons
+# DisabledAddons=
+# Preload input method to be used by default
+# PreloadInputMethod=True
+# Allow input method in the password field
+# AllowInputMethodForPassword=False
+# Show preedit text when typing password
+# ShowPreeditForPassword=False
+# Interval of saving user data in minutes
+# AutoSavePeriod=30
+

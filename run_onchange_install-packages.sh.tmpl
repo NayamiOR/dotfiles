@@ -41,6 +41,45 @@ case "$pm" in
   apt)    pkg git neovim curl nodejs npm fish ;;
 esac
 
+# linuxbrew：dsh 要求 node>=24.9，发行版自带的 nodejs 通常落后一两个大版本，
+# 所以 node 走 brew。brew 装在 /home/linuxbrew/.linuxbrew（单用户）或 ~/.linuxbrew。
+# 官方脚本要 sudo 创建 /home/linuxbrew，NONINTERACTIVE 跳过所有确认。
+export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1
+brew_bin=""
+for b in /home/linuxbrew/.linuxbrew/bin/brew "$HOME/.linuxbrew/bin/brew"; do
+  if [ -x "$b" ]; then brew_bin="$b"; break; fi
+done
+if [ -z "$brew_bin" ]; then
+  echo "安装 linuxbrew ..."
+  installer=$(mktemp)
+  # 直连 GitHub raw 不通时退到 gh-proxy 镜像（和上面 jj 预编译包同样的思路）
+  if ! curl -fsSL --connect-timeout 15 --max-time 300 -o "$installer" \
+        https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh; then
+    curl -fsSL --connect-timeout 15 --max-time 300 -o "$installer" \
+        https://gh-proxy.com/https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+  fi
+  if NONINTERACTIVE=1 /bin/bash "$installer"; then
+    echo "linuxbrew 安装完成"
+  else
+    echo "linuxbrew 安装失败，dsh 将跳过（需要 node>=24.9）" >&2
+  fi
+  rm -f "$installer"
+  for b in /home/linuxbrew/.linuxbrew/bin/brew "$HOME/.linuxbrew/bin/brew"; do
+    if [ -x "$b" ]; then brew_bin="$b"; break; fi
+  done
+fi
+
+# brew 的 node 是 dsh 的运行时依赖；已装就跳过，不重复升级
+if [ -n "$brew_bin" ]; then
+  brew_dir="$(dirname "$brew_bin")"
+  case ":$PATH:" in
+    *":$brew_dir:"*) ;;
+    *)               PATH="$brew_dir:$PATH" ;;
+  esac
+  export PATH
+  "$brew_bin" list node >/dev/null 2>&1 || "$brew_bin" install node
+fi
+
 # Rust：统一走 rustup，避免发行版仓库里的旧版本
 # 无代理时先指向 rsproxy 国内镜像，避免首次安装工具链龟速
 if ! have cargo; then
